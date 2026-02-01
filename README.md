@@ -18,4 +18,12 @@ Allows For Fast Inference & Intuitive App Building - Checkout The Example Apps &
 
 ***COMING TO MAVEN SOON***
 
+## TODO
+
+Add Desktop Example
+
+Docs
+
+Cleanup
+
 [mybigday]:(https://github.com/mybigday)
