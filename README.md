@@ -4,7 +4,7 @@
 
 ## About
 
-A Direct Android & Java Build For The [mybigday]:(https://github.com/mybigday) Serverless Server-like Chat Completion Implementation
+A Direct Android & Java Build For The [mybigday](https://github.com/mybigday) Serverless Server-like Chat Completion Implementation
 
 Allows For Fast Inference & Intuitive App Building - Checkout The Example Apps & Try Building Them Yourself!
 
