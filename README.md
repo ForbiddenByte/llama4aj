@@ -13,8 +13,9 @@ Allows For Fast Inference & Intuitive App Building - Checkout The Example Apps &
 ```
 ./gradlew :examples:android-app:build # You can just copy paste the .apk file to your phone and install it.
 # Or installDebug If You Have adb
-
+#
 # Or For The More Simple Desktop App
+# mv model.gguf examples/desktop-app/ - Place The Model inside examples/desktop-app/
 ./gradlew :examples:desktop-app:run
 ```
 
