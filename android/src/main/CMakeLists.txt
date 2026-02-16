@@ -40,7 +40,7 @@ set(JSI_FILES ${CPP_DIR}/jsi/ThreadPool.cpp)
 set(
     AJLLAMA_SOURCE_FILES
     # JNI Wrapper
-    ${CMAKE_SOURCE_DIR}/allamaJNI.cpp
+    ${CPP_DIR}/ajllamaJNI.cpp
 
     # Core GGML files
     ${CPP_DIR}/ggml.c
@@ -141,9 +141,12 @@ function(build_ajllama_jni jni_name arch cpu_flags)
         target_compile_options(${jni_name} PRIVATE -DLM_GGML_CPU_GENERIC)
     endif ()
 
-    if (CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_options(${jni_name} PRIVATE -DAJLLAMA_ANDROID_ENABLE_LOGGING)
-    endif ()
+    # Explicitly disable verbose logging to avoid variadic string error in rn-completion.cpp
+    target_compile_options(${jni_name} PRIVATE -DRNLLAMA_VERBOSE=0)
+
+#    if (CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+#        target_compile_options(${jni_name} PRIVATE -DAJLLAMA_ANDROID_ENABLE_LOGGING)
+#    endif ()
 
     target_compile_options(${jni_name} PRIVATE -O3 -DNDEBUG)
     target_compile_options(${jni_name} PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)

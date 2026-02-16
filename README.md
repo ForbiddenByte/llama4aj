@@ -8,6 +8,23 @@ A Direct Android & Java Build For The [mybigday](https://github.com/mybigday) Se
 
 Allows For Fast Inference & Intuitive App Building - Checkout The Example Apps & Try Building Them Yourself!
 
+## Building
+
+### Bootstrap (Required for first time or updates)
+
+To synchronize the C++ sources and prepare the build environment:
+
+```bash
+./gradlew bootstrap
+```
+
+This will:
+- Update `llama.rn` and `llama.cpp` submodules.
+- Copy necessary source files to `cpp/`.
+- Apply patches and renaming logic.
+
+### Android
+
 ## Getting Started
 
 ```

@@ -1,0 +1,116 @@
+plugins {
+    id 'java-library'
+}
+
+// Helper to get property - checks project.ext (set by app via beforeEvaluate), then project properties
+def getDesktopProperty(String key, String defaultValue = null) {
+    if (project.ext.has(key)) {
+        return project.ext.get(key)
+    }
+    if (project.hasProperty(key)) {
+        return project.property(key)
+    }
+    return defaultValue
+}
+
+def desktopArchitectures() {
+    def value = getDesktopProperty("ajllama.architectures")
+    logger.lifecycle("desktop: architectures property value = '${value}'")
+    def result = value ? value.split(',') : ["x86_64"] // Default to x86_64 for desktop
+    logger.lifecycle("desktop: architectures result = ${result}")
+    return result
+}
+
+def desktopVariant() {
+    def value = getDesktopProperty("ajllama.variant")
+    
+    if (value == null) {
+        // Auto-detect based on task
+        def tasks = gradle.startParameter.taskNames
+        // If building the desktop app, default to generic/cpu to avoid building everything
+        if (tasks.any { it.contains("examples:desktop-app") }) {
+             value = "generic"
+        } else {
+             value = "" // Build all variants by default for the library itself
+        }
+    }
+
+    logger.lifecycle("desktop: variant = ${value ?: 'all'}")
+    return value
+}
+
+def desktopUseCuda() {
+    def value = getDesktopProperty("ajllama.useCuda", "false")
+    logger.lifecycle("desktop: useCuda = ${value}")
+    return value.toString() == "true"
+}
+
+def desktopUseOpenCL() {
+    def value = getDesktopProperty("ajllama.useOpenCL", "false")
+    logger.lifecycle("desktop: useOpenCL = ${value}")
+    return value.toString() == "true"
+}
+
+def desktopUseVulkan() {
+    def value = getDesktopProperty("ajllama.useVulkan", "false")
+    logger.lifecycle("desktop: useVulkan = ${value}")
+    return value.toString() == "true"
+}
+
+def desktopUseRocm() {
+    def value = getDesktopProperty("ajllama.useRocm", "false")
+    logger.lifecycle("desktop: useRocm = ${value}")
+    return value.toString() == "true"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    // The :java module contains the LlamaContext.java class
+    api project(':java')
+}
+
+// Task to run CMake configuration
+task configureCmake(type: Exec) {
+    workingDir "${project.buildDir}/native"
+    
+    // Ensure build directory exists
+    doFirst {
+        new File(workingDir.toString()).mkdirs()
+    }
+
+    commandLine 'cmake',
+                "${projectDir}", // Path to desktop directory (containing CMakeLists.txt)
+                '-DCMAKE_BUILD_TYPE=Release',
+                "-DAJLLAMA_VARIANT=${desktopVariant()}",
+                '-DLM_GGML_USE_CUDA=' + (desktopUseCuda() ? 'ON' : 'OFF'),
+                '-DLM_GGML_USE_OPENCL=' + (desktopUseOpenCL() ? 'ON' : 'OFF'),
+                '-DLM_GGML_USE_VULKAN=' + (desktopUseVulkan() ? 'ON' : 'OFF'),
+                '-DLM_GGML_USE_HIP=' + (desktopUseRocm() ? 'ON' : 'OFF')
+}
+
+// Task to build CMake project
+task buildCmake(type: Exec) {
+    dependsOn configureCmake
+    workingDir "${project.buildDir}/native"
+    commandLine 'cmake', '--build', '.', '--config', 'Release'
+}
+
+// Task to clean CMake build artifacts
+task cleanCmake(type: Delete) {
+    delete file("${project.buildDir}/native")
+}
+
+// Task to package native libraries into a JAR
+jar {
+    dependsOn buildCmake
+    from("${project.buildDir}/native") {
+        include "libajllama_desktop.so" // Linux
+        include "libajllama_desktop.dylib" // macOS
+        include "ajllama_desktop.dll" // Windows
+        into "libs/"
+    }
+}
