@@ -115,6 +115,10 @@ function(build_ajllama_jni jni_name arch cpu_flags) # Added arch parameter back 
     )
     target_include_directories(${jni_name} PRIVATE ${JNI_INCLUDE_DIRS})
 
+    target_compile_definitions(${jni_name} PRIVATE
+        RNLLAMA_VERBOSE=1
+    )
+
     # Compile Options
     target_compile_options(${jni_name} PRIVATE
         -DLM_GGML_USE_CPU
@@ -123,15 +127,15 @@ function(build_ajllama_jni jni_name arch cpu_flags) # Added arch parameter back 
         -flto
         -D_GNU_SOURCE # Keep for Linux compatibility, can be conditional for Windows/macOS if needed
         ${cpu_flags}
-    )
-
-    target_compile_options(${jni_name} PRIVATE -O3 -DNDEBUG)
-    target_compile_options(${jni_name} PRIVATE
-        -fPIC
-        -fvisibility=hidden
-        -fvisibility-inlines-hidden
-        -fno-finite-math-only
-    )
+        $<$<STREQUAL:"${arch}","x86">:-DLM_GGML_CPU_HAS_AVX> # Add AVX support for x86
+        )
+        
+        target_compile_options(${jni_name} PRIVATE -O3 -DNDEBUG)
+        target_compile_options(${jni_name} PRIVATE -DRNLLAMA_VERBOSE=0) # Aligns with working Android build
+        target_compile_options(${jni_name} PRIVATE
+            -fPIC
+            -fno-finite-math-only
+        )
     target_compile_options(${jni_name} PRIVATE -ffunction-sections -fdata-sections)
 
     target_link_options(${jni_name} PRIVATE -Wl,--gc-sections)
