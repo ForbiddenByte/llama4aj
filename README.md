@@ -25,11 +25,7 @@ Allows For Fast Inference & Intuitive App Building - Checkout The Example Apps &
 
 ## TODO
 
-DESKTOP STILL PARTIALLY SETUP !!! This is the most complete - for now
-
-Android Works Without Issues!
-
-A lot more configuring to make sure it is alligned with upstream [llama.rn](https://github.com/mybigday/llama.rn)
+A lot more configuring to make sure it is alligned with upstream [llama.rn](https://github.com/mybigday/llama.rn) - things like cpu variants ( Just properly defining and doing everything what the upstream projects provide ) 
 
 Proper bootstrap system - The way this is currently setup is kinda terrible as it's a combination of my manual setup and an attempt to setup a bootstrap system. Which is already out-of-sync with upstream so I need it to be more robust. 
 
