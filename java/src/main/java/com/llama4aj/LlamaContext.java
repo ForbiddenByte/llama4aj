@@ -56,53 +56,83 @@ public class LlamaContext {
 
     // Native methods implemented in allamaJNI.cpp
     private static native long nativeLoadModel(String modelPath);
+
     private static native void nativeDestroyContext(long contextPtr);
-    private static native void nativeCompletion(long contextPtr, String completionParamsJson, CompletionCallback callback);
+
+    private static native void nativeCompletion(long contextPtr, String completionParamsJson,
+            CompletionCallback callback);
+
     private static native void nativeInterrupt(long contextPtr);
 
     // Static block to load the native library
     static {
-        // Try to load the most optimized library variant first
-        // If it fails (UnsatisfiedLinkError due to missing symbols/instructions), fall back to the next best one
-        
-        // 1. Full feature set: v8.2 + dotprod + i8mm + Hexagon/OpenCL (if built)
-        try {
-            System.loadLibrary("ajllama_jni_v8_2_dotprod_i8mm_hexagon_opencl");
-            loadedLib = "ajllama_jni_v8_2_dotprod_i8mm_hexagon_opencl";
-        } catch (UnsatisfiedLinkError e1) {
-            try {
-                // 2. High performance: v8.2 + dotprod + i8mm
-                System.loadLibrary("ajllama_jni_v8_2_dotprod_i8mm");
-                loadedLib = "ajllama_jni_v8_2_dotprod_i8mm";
-            } catch (UnsatisfiedLinkError e2) {
+        boolean loadedDesktop = false;
+        String os = System.getProperty("os.name").toLowerCase();
+
+        if (os.contains("win") || os.contains("mac") || os.contains("nix") || os.contains("nux")) {
+            // Attempt to load desktop-specific library variants
+            String[] variants = { "ajllama_desktop_cuda", "ajllama_desktop_opencl", "ajllama_desktop_vulkan",
+                    "ajllama_desktop_hip", "ajllama_desktop_x86_64", "ajllama_desktop_arm64", "ajllama_desktop_cpu",
+                    "ajllama_desktop" };
+            for (String variant : variants) {
                 try {
-                    // 3. Dotprod only
-                    System.loadLibrary("ajllama_jni_v8_2_dotprod");
-                    loadedLib = "ajllama_jni_v8_2_dotprod";
-                } catch (UnsatisfiedLinkError e3) {
+                    System.loadLibrary(variant);
+                    loadedLib = variant;
+                    loadedDesktop = true;
+                    break;
+                } catch (UnsatisfiedLinkError e) {
+                    // Try next variant
+                }
+            }
+            if (!loadedDesktop) {
+                System.err.println("Failed to load any ajllama desktop library variants.");
+            }
+        }
+
+        if (!loadedDesktop) {
+            // Try to load the most optimized library variant first
+            // If it fails (UnsatisfiedLinkError due to missing symbols/instructions), fall
+            // back to the next best one
+
+            // 1. Full feature set: v8.2 + dotprod + i8mm + Hexagon/OpenCL (if built)
+            try {
+                System.loadLibrary("ajllama_jni_v8_2_dotprod_i8mm_hexagon_opencl");
+                loadedLib = "ajllama_jni_v8_2_dotprod_i8mm_hexagon_opencl";
+            } catch (UnsatisfiedLinkError e1) {
+                try {
+                    // 2. High performance: v8.2 + dotprod + i8mm
+                    System.loadLibrary("ajllama_jni_v8_2_dotprod_i8mm");
+                    loadedLib = "ajllama_jni_v8_2_dotprod_i8mm";
+                } catch (UnsatisfiedLinkError e2) {
                     try {
-                        // 4. i8mm only
-                        System.loadLibrary("ajllama_jni_v8_2_i8mm");
-                        loadedLib = "ajllama_jni_v8_2_i8mm";
-                    } catch (UnsatisfiedLinkError e4) {
+                        // 3. Dotprod only
+                        System.loadLibrary("ajllama_jni_v8_2_dotprod");
+                        loadedLib = "ajllama_jni_v8_2_dotprod";
+                    } catch (UnsatisfiedLinkError e3) {
                         try {
-                            // 5. v8.2 base
-                            System.loadLibrary("ajllama_jni_v8_2");
-                            loadedLib = "ajllama_jni_v8_2";
-                        } catch (UnsatisfiedLinkError e5) {
+                            // 4. i8mm only
+                            System.loadLibrary("ajllama_jni_v8_2_i8mm");
+                            loadedLib = "ajllama_jni_v8_2_i8mm";
+                        } catch (UnsatisfiedLinkError e4) {
                             try {
-                                // 6. v8 base (Standard Arm64)
-                                System.loadLibrary("ajllama_jni_v8");
-                                loadedLib = "ajllama_jni_v8";
-                            } catch (UnsatisfiedLinkError e6) {
+                                // 5. v8.2 base
+                                System.loadLibrary("ajllama_jni_v8_2");
+                                loadedLib = "ajllama_jni_v8_2";
+                            } catch (UnsatisfiedLinkError e5) {
                                 try {
-                                    // 7. Generic fallback / x86_64
-                                    System.loadLibrary("ajllama_jni");
-                                    loadedLib = "ajllama_jni";
-                                } catch (UnsatisfiedLinkError e7) {
-                                     // 8. Legacy/Original name fallback
-                                     System.loadLibrary("ajllama_jni_x86_64");
-                                     loadedLib = "ajllama_jni_x86_64";
+                                    // 6. v8 base (Standard Arm64)
+                                    System.loadLibrary("ajllama_jni_v8");
+                                    loadedLib = "ajllama_jni_v8";
+                                } catch (UnsatisfiedLinkError e6) {
+                                    try {
+                                        // 7. Generic fallback / x86_64
+                                        System.loadLibrary("ajllama_jni");
+                                        loadedLib = "ajllama_jni";
+                                    } catch (UnsatisfiedLinkError e7) {
+                                        // 8. Legacy/Original name fallback
+                                        System.loadLibrary("ajllama_jni_x86_64");
+                                        loadedLib = "ajllama_jni_x86_64";
+                                    }
                                 }
                             }
                         }
@@ -110,7 +140,7 @@ public class LlamaContext {
                 }
             }
         }
-        
+
         // Also load c++_shared if not already loaded by the system
         try {
             System.loadLibrary("c++_shared");

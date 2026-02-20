@@ -14,3 +14,6 @@ allprojects {
         mavenCentral()
     }
 }
+
+// bootstrap.gradle is applied at the end
+apply from: 'bootstrap.gradle'

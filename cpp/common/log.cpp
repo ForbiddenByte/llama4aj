@@ -25,6 +25,10 @@
 #include <android/log.h>
 #endif
 
+#if defined(__ANDROID__) && defined(RNLLAMA_ANDROID_ENABLE_LOGGING)
+#include <android/log.h>
+#endif
+
 int common_log_verbosity_thold = LOG_DEFAULT_LLAMA;
 
 void common_log_set_verbosity_thold(int verbosity) {

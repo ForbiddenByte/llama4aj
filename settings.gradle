@@ -1,40 +1,73 @@
-include ':java', ':android', ':examples:android-app'
+// Check for Android SDK
+def hasAndroidSdk = System.getenv("ANDROID_HOME") != null || new File(rootDir, "local.properties").exists()
 
-// Add this to your settings.gradle file (ONE TIME EDIT)
-// This loads app properties BEFORE any build.gradle evaluates
+if (hasAndroidSdk) {
+    include ':java', ':android', ':examples:android-app', ':desktop', ':examples:desktop-app'
+} else {
+    println "Android SDK not found (ANDROID_HOME not set and local.properties missing). Skipping Android modules."
+    include ':java', ':desktop', ':examples:desktop-app'
+}
 
 gradle.beforeProject { project ->
     if (project.path == ':android') {
-        // Check if the current build is for the examples:android-app project
-        def isBuildingApp = gradle.startParameter.taskNames.any { it.startsWith(':examples:android-app') }
+        def isBuildingApp = gradle.startParameter.taskNames.any { it.contains(':examples:android-app') }
 
         if (isBuildingApp) {
-            // Find the app module's gradle.properties
             def appPropsFile = new File(rootDir, 'examples/android-app/gradle.properties')
             if (appPropsFile.exists()) {
                 def props = new Properties()
                 appPropsFile.withInputStream { props.load(it) }
-                
-                // Set them on the android project's ext
                 props.each { key, value ->
-                    project.ext.set(key.toString(), value.toString())
+                    if (key.toString().startsWith("ajllama.")) {
+                        project.ext.set(key.toString(), value.toString())
+                    }
                 }
-                
                 println "Loaded app config for :android from ${appPropsFile}"
             }
         } else {
             println "Skipping app config for :android as not building examples:android-app"
         }
 
-        // Unconditionally load properties from android/gradle.properties for the :android project
         def androidPropsFile = new File(rootDir, 'android/gradle.properties')
         if (androidPropsFile.exists()) {
             def props = new Properties()
             androidPropsFile.withInputStream { props.load(it) }
             props.each { key, value ->
-                project.ext.set(key.toString(), value.toString())
+                if (key.toString().startsWith("ajllama.")) {
+                    project.ext.set(key.toString(), value.toString())
+                }
             }
             println "Loaded properties for :android from ${androidPropsFile}"
+        }
+    }
+
+    if (project.path == ':desktop') {
+        def isBuildingApp = gradle.startParameter.taskNames.any { it.contains(':examples:desktop-app') }
+
+        if (isBuildingApp) {
+            def appPropsFile = new File(rootDir, 'examples/desktop-app/gradle.properties')
+            if (appPropsFile.exists()) {
+                def props = new Properties()
+                appPropsFile.withInputStream { props.load(it) }
+                props.each { key, value ->
+                    if (key.toString().startsWith("ajllama.")) {
+                        project.ext.set(key.toString(), value.toString())
+                    }
+                }
+                println "Loaded app config for :desktop from ${appPropsFile}"
+            }
+        }
+
+        def desktopPropsFile = new File(rootDir, 'desktop/gradle.properties')
+        if (desktopPropsFile.exists()) {
+            def props = new Properties()
+            desktopPropsFile.withInputStream { props.load(it) }
+            props.each { key, value ->
+                if (key.toString().startsWith("ajllama.")) {
+                    project.ext.set(key.toString(), value.toString())
+                }
+            }
+            println "Loaded properties for :desktop from ${desktopPropsFile}"
         }
     }
 }

@@ -1,9 +1,5 @@
 #include "rn-llama.h"
 #include "ggml-cpu.h"
-#include "rn-tts.h"
-#include "rn-mtmd.hpp"
-#include "rn-completion.h"
-#include "rn-slot-manager.h"
 #include "rn-common.hpp"
 
 // Include multimodal support
@@ -495,8 +491,6 @@ void llama_rn_context::disableParallelMode() {
 }
 
 void llama_rn_context::clearCache(bool clear_data) {
-
-
     if (ctx == nullptr) {
         LOG_WARNING("Cannot clear cache: context not initialized");
         return;

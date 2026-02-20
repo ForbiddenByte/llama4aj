@@ -96,10 +96,10 @@ LM_GGML_API size_t quantize_q8_0(const float * LM_GGML_RESTRICT src, void * LM_G
 
 LM_GGML_API size_t quantize_mxfp4(const float * LM_GGML_RESTRICT src, void * LM_GGML_RESTRICT dst, int64_t nrows, int64_t n_per_row, const float * imatrix);
 
-LM_GGML_API void lm_iq2xs_init_impl(enum lm_ggml_type type);
-LM_GGML_API void lm_iq2xs_free_impl(enum lm_ggml_type type);
-LM_GGML_API void lm_iq3xs_init_impl(int grid_size);
-LM_GGML_API void lm_iq3xs_free_impl(int grid_size);
+LM_GGML_API void lm_lm_iq2xs_init_impl(enum lm_ggml_type type);
+LM_GGML_API void lm_lm_iq2xs_free_impl(enum lm_ggml_type type);
+LM_GGML_API void lm_lm_iq3xs_init_impl(int grid_size);
+LM_GGML_API void lm_lm_iq3xs_free_impl(int grid_size);
 
 #ifdef __cplusplus
 }
