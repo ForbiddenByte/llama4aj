@@ -55,7 +55,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
 
 // --- Completion Callback (from C++ to Java) ---
 
-void completion_callback_c(const char* token_data_json, void* user_data) {
+void completion_callback_c(const char* content, bool stop, void* user_data) {
     JNIEnv* env = nullptr;
     bool attached = false;
 
@@ -82,7 +82,7 @@ void completion_callback_c(const char* token_data_json, void* user_data) {
         return;
     }
 
-    jmethodID on_token_method = env->GetMethodID(callback_class, "onTokenReceived", "(Ljava/lang/String;)V");
+    jmethodID on_token_method = env->GetMethodID(callback_class, "onTokenReceived", "(Ljava/lang/String;Z)V");
     if (on_token_method == nullptr) {
         jni_log("ERROR: Could not find onTokenReceived method on callback object");
         env->DeleteLocalRef(callback_class);
@@ -91,19 +91,19 @@ void completion_callback_c(const char* token_data_json, void* user_data) {
     }
 
     // Create a Java string from the C++ string
-    jstring java_token_data = env->NewStringUTF(token_data_json);
-    if (java_token_data == nullptr) {
-        jni_log("ERROR: Failed to create Java string from token data");
+    jstring java_content = env->NewStringUTF(content);
+    if (java_content == nullptr) {
+        jni_log("ERROR: Failed to create Java string from token content");
         env->DeleteLocalRef(callback_class);
         if (attached) g_jvm->DetachCurrentThread();
         return;
     }
 
     // Call the Java method
-    env->CallVoidMethod(callback_obj, on_token_method, java_token_data);
+    env->CallVoidMethod(callback_obj, on_token_method, java_content, stop);
 
     // Clean up local references
-    env->DeleteLocalRef(java_token_data);
+    env->DeleteLocalRef(java_content);
     env->DeleteLocalRef(callback_class);
 
     // Detach the thread if it was attached
@@ -248,6 +248,10 @@ Java_com_llama4aj_nativeCompletion(JNIEnv *env, jclass /*clazz*/, jlong context_
             nlohmann::json j_params = nlohmann::json::parse(params_str);
             ctx->params.prompt = j_params.value("prompt", "");
             ctx->params.sampling.temp = j_params.value("temperature", 0.8f);
+            ctx->params.sampling.top_k = j_params.value("top_k", 40);
+            ctx->params.sampling.top_p = j_params.value("top_p", 0.95f);
+            ctx->params.sampling.penalty_repeat = j_params.value("repeat_penalty", 1.1f);
+            ctx->params.n_predict = j_params.value("n_predict", -1);
             
             if (!ctx->completion->initSampling()) {
                 throw std::runtime_error("Failed to init sampling");
@@ -268,11 +272,10 @@ Java_com_llama4aj_nativeCompletion(JNIEnv *env, jclass /*clazz*/, jlong context_
                 }
                 rnllama::completion_token_output token_output = ctx->completion->doCompletion();
 
-                nlohmann::json token_data_json;
-                token_data_json["content"] = rnllama::tokens_to_output_formatted_string(ctx->ctx, token_output.tok);
-                token_data_json["stop"] = !ctx->completion->has_next_token || ctx->completion->stopped_word;
+                std::string content = rnllama::tokens_to_output_formatted_string(ctx->ctx, token_output.tok);
+                bool stop = !ctx->completion->has_next_token || ctx->completion->stopped_word;
 
-                completion_callback_c(token_data_json.dump().c_str(), callback_context);
+                completion_callback_c(content.c_str(), stop, callback_context);
 
                 if (ctx->completion->stopped_word) {
                     break;

@@ -21,14 +21,24 @@ Allows For Fast Inference & Intuitive App Building - Checkout The Example Apps &
 # Or installDebug If You Have adb
 #
 # Or For The More Simple Desktop App
-# mv model.gguf examples/desktop-app/ - Place The Model inside examples/desktop-app/
+# Place The Model inside examples/desktop-app/ - mv model.gguf examples/desktop-app/
 ./gradlew :examples:desktop-app:run
 ```
 
-## Example
-```
+##### Simple Example
+```java
 import com.llama4aj;
+
+public class ChatExample {
+    public static void main(String[] args) {
+        llama4aj.generate("model.gguf", "Hello!", System.out::print); // Expects the model to be in the same directory / folder
+    }
+}
 ```
+
+Or make your own offline / local ChatGPT clone with 500 lines of code!
+
+Check the Desktop App for the very simple version
 
 ***COMING TO MAVEN SOON***
 
@@ -37,6 +47,8 @@ import com.llama4aj;
 ## TODO
 
 A lot more configuring to make sure it is alligned with upstream [llama.rn](https://github.com/mybigday/llama.rn) - things like cpu variants ( Just properly defining and doing everything what the upstream projects provide - still bits TODO but getting close to 0.0.1 - alpha )
+
+Implement in different Java versions
 
 Proper syncing system
 

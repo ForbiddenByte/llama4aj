@@ -126,12 +126,8 @@ android {
         
         // Determine variant to build
         def variant = ajllamaVariant()
-        
-        if (variant == null) {
-          // Auto-detect based on task
-          def tasks = gradle.startParameter.taskNames
-          def isAppBuild = tasks.any { it.contains("examples:android-app") }
-          variant = isAppBuild ? "generic" : ""
+        if (variant == null || variant.trim().isEmpty()) {
+            variant = "generic"
         }
 
         arguments "-DAJLLAMA_BUILD_FROM_SOURCE=${ajllamaBuildFromSourceFlag}",

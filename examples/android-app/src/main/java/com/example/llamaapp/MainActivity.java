@@ -18,9 +18,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +26,7 @@ import java.util.concurrent.Executors;
 
 import com.llama4aj;
 
-public class MainActivity extends AppCompatActivity implements llama4aj.CompletionCallback {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "LlamaApp";
 
@@ -185,24 +182,25 @@ public class MainActivity extends AppCompatActivity implements llama4aj.Completi
 
             try {
                 String fullPrompt = buildPrompt(userMessage);
-                JSONObject params = new JSONObject();
-                params.put("prompt", fullPrompt);
-                params.put("n_predict", modelManager.getMaxTokens());
-                params.put("temperature", modelManager.getTemperature());
-                params.put("top_k", 40);
-                params.put("top_p", 0.9);
-                params.put("repeat_penalty", 1.1);
-                params.put("stream", true);
 
                 Log.d(TAG, "Starting completion with prompt: " + fullPrompt);
-                model.completion(params.toString(), this);
+                model.generate(new llama4aj.CompletionParams()
+                    .prompt(fullPrompt)
+                    .nPredict(modelManager.getMaxTokens())
+                    .temperature(modelManager.getTemperature())
+                    .stream(true), 
+                    token -> {
+                        currentResponse.append(token);
+                        final String fullResponse = currentResponse.toString();
+            
+                        mainHandler.post(() -> {
+                            updateLastModelMessage(fullResponse);
+                            chatRecyclerView.scrollToPosition(messageList.size() - 1);
+                        });
+                    },
+                    () -> mainHandler.post(this::resetInputState)
+                );
 
-            } catch (JSONException e) {
-                Log.e(TAG, "JSON error", e);
-                mainHandler.post(() -> {
-                    updateLastModelMessage("Error: Failed to create request");
-                    resetInputState();
-                });
             } catch (Exception e) {
                 Log.e(TAG, "Generation error", e);
                 mainHandler.post(() -> {
@@ -220,36 +218,6 @@ public class MainActivity extends AppCompatActivity implements llama4aj.Completi
             return systemPrompt.trim() + "\n\nUser: " + userMessage + "\n\nAssistant:";
         }
         return userMessage;
-    }
-
-    @Override
-    public void onTokenReceived(String tokenDataJson) {
-        try {
-            JSONObject json = new JSONObject(tokenDataJson);
-            String content = json.optString("content", "");
-            boolean stop = json.optBoolean("stop", false);
-
-            currentResponse.append(content);
-            final String fullResponse = currentResponse.toString();
-
-            mainHandler.post(() -> {
-                updateLastModelMessage(fullResponse);
-                chatRecyclerView.scrollToPosition(messageList.size() - 1);
-            });
-
-            if (stop) {
-                mainHandler.post(this::resetInputState);
-            }
-
-        } catch (JSONException e) {
-            Log.e(TAG, "Error parsing token JSON", e);
-            mainHandler.post(() -> {
-                if (currentResponse.length() == 0) {
-                    updateLastModelMessage("Error: Invalid response from model");
-                }
-                resetInputState();
-            });
-        }
     }
 
     private void addUserMessage(String text) {

@@ -78,7 +78,6 @@ application {
 dependencies {
     implementation project(':java')
     implementation project(':desktop')
-    implementation 'org.json:json:20231013'
 }
 
 // Ensure the desktop native library is built before the app jar

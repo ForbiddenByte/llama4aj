@@ -25,26 +25,24 @@ def desktopVariant() {
     def value = getDesktopProperty("ajllama.variant")
     logger.lifecycle("desktop: variant (from getDesktopProperty) = '${value}'")
     
-    if (value == null) {
-        // Auto-detect based on task
-        def tasks = gradle.startParameter.taskNames
-        // If building the desktop app, default to generic/cpu to avoid building everything
-        if (tasks.any { it.contains("examples:desktop-app") }) {
-            // Check host architecture to build a more specific variant for the app
+    if (value == null || value.trim().isEmpty()) {
+        if (desktopUseCuda()) value = "cuda"
+        else if (desktopUseOpenCL()) value = "opencl"
+        else if (desktopUseVulkan()) value = "vulkan"
+        else if (desktopUseRocm()) value = "hip"
+        else {
             def osArch = System.getProperty("os.arch").toLowerCase()
             if (osArch.contains("amd64") || osArch.contains("x86_64")) {
                 value = "x86_64"
             } else if (osArch.contains("aarch64")) {
                 value = "arm64"
             } else {
-                value = "generic" // Default to generic/cpu
+                value = "generic"
             }
-        } else {
-            value = "" // Build all variants by default for the library itself
         }
     }
 
-    logger.lifecycle("desktop: variant (after auto-detect) = '${value ?: 'all'}'")
+    logger.lifecycle("desktop: variant (after auto-detect) = '${value}'")
     return value
 }
 
@@ -129,9 +127,16 @@ task cleanCmake(type: Delete) {
 jar {
     dependsOn buildCmake
     from("${project.buildDir}/native") {
-        include "libajllama_desktop_*.so" // Linux
-        include "libajllama_desktop_*.dylib" // macOS
-        include "ajllama_desktop_*.dll" // Windows
+        def includePattern = desktopVariant()
+        if (includePattern != null && !includePattern.isEmpty() && includePattern != "all") {
+            include "libajllama_desktop_${includePattern}.so" // Linux
+            include "libajllama_desktop_${includePattern}.dylib" // macOS
+            include "ajllama_desktop_${includePattern}.dll" // Windows
+        } else {
+            include "libajllama_desktop_*.so" // Linux
+            include "libajllama_desktop_*.dylib" // macOS
+            include "ajllama_desktop_*.dll" // Windows
+        }
         into "libs/"
     }
 }

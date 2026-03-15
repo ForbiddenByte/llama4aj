@@ -144,7 +144,6 @@ function(build_ajllama_jni jni_name arch cpu_flags) # Added arch parameter back 
     # CUDA backend support
     if (LM_GGML_USE_CUDA)
         message(STATUS "Building with CUDA support for ${jni_name}")
-        find_package(CUDA REQUIRED)
         target_link_libraries(${jni_name} PRIVATE CUDA::cudart)
         target_compile_options(${jni_name} PRIVATE -DLM_GGML_USE_CUDA)
         # Add CUDA source files
@@ -153,7 +152,7 @@ function(build_ajllama_jni jni_name arch cpu_flags) # Added arch parameter back 
     endif ()
 
     # Metal backend support (macOS)
-    if (APPLE)
+    if (APPLE AND LM_GGML_USE_METAL)
         message(STATUS "Building with Metal support for ${jni_name}")
         target_link_libraries(${jni_name} PRIVATE "-framework Foundation" "-framework Metal" "-framework MetalKit")
         target_compile_options(${jni_name} PRIVATE -DLM_GGML_USE_METAL)
@@ -222,6 +221,12 @@ option(LM_GGML_USE_CUDA "Enable CUDA backend" OFF)
 option(LM_GGML_USE_OPENCL "Enable OpenCL backend" OFF)
 option(LM_GGML_USE_VULKAN "Enable Vulkan backend" OFF)
 option(LM_GGML_USE_HIP "Enable ROCm/HIP backend" OFF)
+
+# CUDA language must be enabled at top level, not inside a function
+if (LM_GGML_USE_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    enable_language(CUDA)
+endif()
 
 # Build a generic CPU version
 should_build_variant("generic" BUILD_GENERIC)
