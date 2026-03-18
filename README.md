@@ -6,29 +6,17 @@
 
 A Direct Android & Java Build For The [mybigday](https://github.com/mybigday) Serverless Server-like Chat Completion Implementation
 
-Java 11 Required
+##### Java 11 Required
 
-Supports Android, Linux - Currently tested
+##### Supports 
+
+Android, Linux - Currently tested
 
 In theory should support Windows, BSD & macOS - Still needs to be tested!
 
 Allows For Fast Inference & Intuitive App Building
 
 ## Getting Started
-
-```
-git clone https://github.com/ForbiddenByte/llama4aj.git
-
-cd llama4aj
-
-./gradlew :examples:android-app:build
-# You can just copy paste the .apk file to your phone and install it.
-# Or installDebug If You Have adb
-#
-# Or For The More Simple Desktop App
-# Place The Model inside examples/desktop-app/ - mv model.gguf examples/desktop-app/
-./gradlew :examples:desktop-app:run
-```
 
 ##### Simple Example
 ```java
@@ -46,9 +34,27 @@ Or make your own offline / local ChatGPT clone with 500 lines of code!
 
 Check the Desktop App for the very simple version
 
-***COMING TO MAVEN SOON***
+##### Building From Source
 
-***SCALA VERSION COMING SOON***
+```
+git clone https://github.com/ForbiddenByte/llama4aj.git
+
+cd llama4aj
+
+./gradlew :examples:android-app:build
+# You can just copy paste the .apk file to your phone and install it.
+# Or installDebug If You Have adb
+#
+# Or For The More Simple Desktop App
+# Place The Model inside examples/desktop-app/ - mv model.gguf examples/desktop-app/
+./gradlew :examples:desktop-app:run
+```
+
+Or make your own offline / local ChatGPT clone with 500 lines of code!
+
+Check the Desktop App for the very simple version
+
+***COMING TO MAVEN SOON***
 
 ## TODO
 
