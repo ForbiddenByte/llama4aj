@@ -1,8 +1,17 @@
 // Check for Android SDK
 def hasAndroidSdk = System.getenv("ANDROID_HOME") != null || new File(rootDir, "local.properties").exists()
 
-if (hasAndroidSdk) {
+// Check if any requested task actually targets an Android module
+def isBuildingAll = gradle.startParameter.taskNames.isEmpty()
+def isBuildingAndroid = isBuildingAll || gradle.startParameter.taskNames.any { name ->
+    name.contains(':android') || name.contains(':examples:android-app')
+}
+
+if (hasAndroidSdk && isBuildingAndroid) {
     include ':java', ':android', ':examples:android-app', ':desktop', ':examples:desktop-app'
+} else if (hasAndroidSdk) {
+    println "Android SDK found but not building Android targets. Skipping :android and :examples:android-app."
+    include ':java', ':desktop', ':examples:desktop-app'
 } else {
     println "Android SDK not found (ANDROID_HOME not set and local.properties missing). Skipping Android modules."
     include ':java', ':desktop', ':examples:desktop-app'
@@ -11,7 +20,6 @@ if (hasAndroidSdk) {
 gradle.beforeProject { project ->
     if (project.path == ':android') {
         def isBuildingApp = gradle.startParameter.taskNames.any { it.contains(':examples:android-app') }
-
         if (isBuildingApp) {
             def appPropsFile = new File(rootDir, 'examples/android-app/gradle.properties')
             if (appPropsFile.exists()) {
@@ -27,7 +35,6 @@ gradle.beforeProject { project ->
         } else {
             println "Skipping app config for :android as not building examples:android-app"
         }
-
         def androidPropsFile = new File(rootDir, 'android/gradle.properties')
         if (androidPropsFile.exists()) {
             def props = new Properties()
@@ -40,10 +47,8 @@ gradle.beforeProject { project ->
             println "Loaded properties for :android from ${androidPropsFile}"
         }
     }
-
     if (project.path == ':desktop') {
         def isBuildingApp = gradle.startParameter.taskNames.any { it.contains(':examples:desktop-app') }
-
         if (isBuildingApp) {
             def appPropsFile = new File(rootDir, 'examples/desktop-app/gradle.properties')
             if (appPropsFile.exists()) {
@@ -57,7 +62,6 @@ gradle.beforeProject { project ->
                 println "Loaded app config for :desktop from ${appPropsFile}"
             }
         }
-
         def desktopPropsFile = new File(rootDir, 'desktop/gradle.properties')
         if (desktopPropsFile.exists()) {
             def props = new Properties()
@@ -71,4 +75,3 @@ gradle.beforeProject { project ->
         }
     }
 }
-
