@@ -85,10 +85,6 @@ cd llama4aj
 ./gradlew :examples:desktop-app:run
 ```
 
-Or make your own offline / local ChatGPT clone with 500 lines of code!
-
-Check the Desktop App for the very simple version
-
 ***COMING TO MAVEN SOON***
 
 ## TODO
