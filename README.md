@@ -32,7 +32,7 @@ Since this project is built on llama.cpp bindings, a wide range of compute backe
 | CUDA | Nvidia GPU | ✅ | Linux |
 | HIP | AMD GPU | ✅ | — |
 | ZenDNN | AMD CPU | ✅ | — |
-| Vulkan | GPU | ✅ | Android, Linux |
+| Vulkan | GPU | ✅ | — |
 | CANN | Ascend NPU | ✅ | — |
 | OpenCL | Adreno GPU | ✅ | Android |
 | IBM zDNN | IBM Z & LinuxONE | ✅ | — |
