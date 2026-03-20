@@ -6,6 +6,8 @@
 
 A Direct Android & Java Build For The [mybigday](https://github.com/mybigday) Serverless Server-like Chat Completion Implementation
 
+[![Video](https://img.youtube.com/vi/iV7VQaf6jtg/0.jpg)](https://www.youtube.com/shorts/iV7VQaf6jtg)
+
 ### Java 11 Required
 
 ##### OS 
